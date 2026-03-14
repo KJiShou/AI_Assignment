@@ -1,0 +1,83 @@
+# ==============================
+# Python
+# ==============================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# ==============================
+# Virtual Environments
+# ==============================
+venv/
+env/
+ENV/
+.venv/
+env.bak/
+venv.bak/
+
+# ==============================
+# Jupyter Notebook
+# ==============================
+.ipynb_checkpoints
+
+# ==============================
+# PyCharm / JetBrains
+# ==============================
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ==============================
+# Distribution / packaging
+# ==============================
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ==============================
+# Logs
+# ==============================
+*.log
+
+# ==============================
+# Unit test / coverage
+# ==============================
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+pytest_cache/
+
+# ==============================
+# Jupyter runtime files
+# ==============================
+*.nbconvert.ipynb
+
+# ==============================
+# Environment variables
+# ==============================
+.env
+.env.*
+
+# ==============================
+# OS files
+# ==============================
+.DS_Store
+Thumbs.db
