@@ -83,3 +83,8 @@ pytest_cache/
 Thumbs.db
 
 data/
+
+# ==============================
+# Model training artifacts
+# ==============================
+Model/**/runs/
