@@ -1,8 +1,9 @@
-numpy<2.0
+numpy==1.26.4
 pandas
 matplotlib
 seaborn
 scikit-learn
+scikit-image
 Pillow
 opencv-python==4.8.1.78
 # Native Windows GPU support stops at TensorFlow 2.10.
