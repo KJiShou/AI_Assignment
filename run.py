@@ -169,20 +169,21 @@ class HOGSVMAdultDetector:
 class ViTBinaryClassifier(nn.Module):
     def __init__(self):
         super().__init__()
-        self.backbone = models.vit_b_16(weights=None)
-        in_features = self.backbone.heads.head.in_features
 
-        self.backbone.heads = nn.Identity()
+        vit = models.vit_b_16(weights=None)
+        in_features = vit.heads.head.in_features
+        vit.heads = nn.Identity()
+
+        self.backbone = vit
         self.head = nn.Linear(in_features, 1)
 
     def forward(self, x):
         features = self.backbone(x)
-        logits = self.head(features)
-        return logits
+        return self.head(features).squeeze(1)
 
 
 class ViTAdultDetector:
-    def __init__(self, model_path, device=None, threshold=0.5):
+    def __init__(self, model_path, device=None, threshold=0.457286):
         self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
         self.threshold = threshold
 
@@ -195,11 +196,9 @@ class ViTAdultDetector:
         else:
             state_dict = checkpoint
 
-        # remove possible 'module.' prefix from DataParallel
         cleaned_state_dict = {}
         for k, v in state_dict.items():
-            new_k = k.replace("module.", "")
-            cleaned_state_dict[new_k] = v
+            cleaned_state_dict[k.replace("module.", "")] = v
 
         self.model.load_state_dict(cleaned_state_dict, strict=True)
         self.model.to(self.device)
@@ -207,7 +206,8 @@ class ViTAdultDetector:
 
         self.transform = transforms.Compose([
             transforms.ToPILImage(),
-            transforms.Resize((224, 224)),
+            transforms.Resize(int(224 * 1.14)),
+            transforms.CenterCrop(224),
             transforms.ToTensor(),
             transforms.Normalize(
                 mean=[0.485, 0.456, 0.406],
