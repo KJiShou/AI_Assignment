@@ -5,6 +5,7 @@ seaborn
 scikit-learn
 scikit-image
 Pillow
+customtkinter
 opencv-python==4.8.1.78
 # Native Windows GPU support stops at TensorFlow 2.10.
 tensorflow-cpu==2.10.* ; platform_system == "Windows" and python_version < "3.11"
