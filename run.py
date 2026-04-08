@@ -295,7 +295,7 @@ class AdultDetectionApp:
         self.root = root
         self.root.title("Adult Face Detection Studio")
         self.root.geometry("1480x860")
-        self.root.minsize(1320, 760)
+        self.root.minsize(1380, 820)
 
         ctk.set_appearance_mode("light")
         ctk.set_default_color_theme("blue")
@@ -305,6 +305,7 @@ class AdultDetectionApp:
         self.cap = None
         self.running = False
         self.capture_active = False
+        self._stop_after_id = None
         self.last_capture_at = 0.0
         self.current_preview_pil = None
         self.preview_image = None
@@ -361,7 +362,7 @@ class AdultDetectionApp:
 
         self.sidebar = ctk.CTkFrame(
             self.root,
-            width=320,
+            width=340,
             fg_color=self.palette["panel"],
             corner_radius=24,
             border_width=1,
@@ -372,8 +373,8 @@ class AdultDetectionApp:
 
         self.content = ctk.CTkFrame(self.root, fg_color="transparent")
         self.content.grid(row=0, column=1, sticky="nsew", padx=(0, 22), pady=22)
-        self.content.grid_columnconfigure(0, weight=3)
-        self.content.grid_columnconfigure(1, weight=2)
+        self.content.grid_columnconfigure(0, weight=5)
+        self.content.grid_columnconfigure(1, weight=3)
         self.content.grid_rowconfigure(0, weight=1)
 
         self._build_sidebar()
@@ -467,14 +468,17 @@ class AdultDetectionApp:
         self.stop_btn.pack(fill="x", padx=16, pady=(0, 10))
         self.upload_btn.pack(fill="x", padx=16, pady=(0, 16))
 
-        status_card = ctk.CTkFrame(
+        status_scroll = ctk.CTkScrollableFrame(
             self.sidebar,
             fg_color="#FFFFFF",
             corner_radius=20,
             border_width=1,
             border_color=self.palette["border"],
+            scrollbar_button_color=self.palette["accent"],
+            scrollbar_button_hover_color="#0A69D8",
         )
-        status_card.pack(fill="x", padx=18, pady=(0, 14))
+        status_scroll.pack(fill="x", padx=18, pady=(0, 14))
+        status_scroll.grid_columnconfigure(0, weight=1)
 
         for label_text, variable in (
             ("Status", self.status_var),
@@ -484,18 +488,18 @@ class AdultDetectionApp:
             ("Source", self.source_var),
         ):
             ctk.CTkLabel(
-                status_card,
+                status_scroll,
                 text=label_text,
                 anchor="w",
                 font=ctk.CTkFont(size=12, weight="bold"),
                 text_color=self.palette["muted"],
             ).pack(fill="x", padx=16, pady=(14 if label_text == "Status" else 8, 2))
             ctk.CTkLabel(
-                status_card,
+                status_scroll,
                 textvariable=variable,
                 justify="left",
                 anchor="w",
-                wraplength=252,
+                wraplength=290,
                 font=ctk.CTkFont(size=14),
                 text_color=self.palette["text"],
             ).pack(fill="x", padx=16, pady=(0, 4 if label_text != "Source" else 16))
@@ -556,14 +560,17 @@ class AdultDetectionApp:
             border_color=self.palette["border"],
         )
         panel.grid(row=0, column=1, sticky="nsew")
+        panel.grid_columnconfigure(0, weight=1)
 
+        # Row 0: header label
         ctk.CTkLabel(
             panel,
             text="Final Result",
             font=ctk.CTkFont(size=22, weight="bold"),
             text_color=self.palette["text"],
-        ).pack(anchor="w", padx=22, pady=(20, 12))
+        ).grid(row=0, column=0, sticky="w", padx=22, pady=(20, 8))
 
+        # Row 1: result card
         self.result_card = ctk.CTkFrame(
             panel,
             fg_color="#FFFFFF",
@@ -571,8 +578,10 @@ class AdultDetectionApp:
             border_width=1,
             border_color=self.palette["border"],
         )
-        self.result_card.pack(fill="x", padx=22, pady=(0, 14))
+        self.result_card.grid(row=1, column=0, sticky="ew", padx=22, pady=(0, 14))
+        self.result_card.grid_columnconfigure(0, weight=1)
 
+        # result_card children use pack (one column, no grid conflict)
         self.result_pill = ctk.CTkLabel(
             self.result_card,
             text="Awaiting Analysis",
@@ -615,10 +624,11 @@ class AdultDetectionApp:
             text_color=self.palette["muted"],
         ).pack(fill="x", padx=18, pady=(0, 18))
 
+        # Row 2: spacer
         ctk.CTkFrame(
             panel,
             fg_color="transparent",
-        ).pack(fill="both", expand=True, padx=22, pady=(0, 22))
+        ).grid(row=2, column=0, sticky="ews", padx=22, pady=(0, 22))
 
     def _refresh_controls(self):
         model_ready = self.model is not None
@@ -678,6 +688,7 @@ class AdultDetectionApp:
             dark_image=preview,
             size=preview.size,
         )
+        self.preview_label.configure(text="", image="")
         self.preview_label.configure(text="", image=self.preview_image)
 
     def _create_prediction_payload(self, face_bgr):
@@ -804,6 +815,10 @@ class AdultDetectionApp:
         self.running = False
         self.last_capture_at = 0.0
 
+        if self._stop_after_id is not None:
+            self.root.after_cancel(self._stop_after_id)
+            self._stop_after_id = None
+
         if self.cap:
             self.cap.release()
             self.cap = None
@@ -816,6 +831,7 @@ class AdultDetectionApp:
         self._set_status("Webcam stopped.", "Idle")
         self.face_var.set("Largest face detector is ready.")
         self.source_var.set("Source: None")
+        self.preview_label.configure(text="", image="")
         self.preview_label.configure(text="Webcam stopped. Start the webcam or upload an image.", image=None)
         self.preview_image = None
         self._refresh_controls()
@@ -965,7 +981,7 @@ class AdultDetectionApp:
             self._set_preview_badge("Webcam Live", "live")
 
         self._render_preview(display_frame)
-        self.root.after(30, self.update_frame)
+        self._stop_after_id = self.root.after(30, self.update_frame)
 
     def on_closing(self):
         self.stop_webcam()
