@@ -78,7 +78,7 @@ def cv_to_pil(frame_bgr):
 
 class FaceDetector:
     def __init__(self):
-        cascade_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+        cascade_path = resource_path("cv2/data/haarcascade_frontalface_default.xml")
         self.detector = cv2.CascadeClassifier(cascade_path)
 
     def detect(self, frame):
